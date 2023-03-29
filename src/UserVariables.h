@@ -12,6 +12,7 @@ using namespace std;
 class UserVariables {
 public:
     String VcfFileName;
+    string Format;
     String WeightFileName;
     String OutputPrefix;
 
@@ -21,6 +22,7 @@ public:
         VcfFileName = "";
         WeightFileName = "";
         OutputPrefix = "";
+        Format = "DS";
     };
 };
 

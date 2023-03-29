@@ -1,5 +1,5 @@
 #include <getopt.h>
-#include "UserVariables.h"
+#include "Analysis.h"
 
 void helpFile();
 
@@ -29,6 +29,9 @@ int main(int argc, char ** argv)
             default: printf("[ERROR:] Unknown argument: %s\n", optarg);
         }
     }
+
+    Analysis myAnalysis(myUserVariables);
+    String MySuccessStatus = myAnalysis.Run();
 //
 //    if(!myUserVariables.CheckValidity()) return -1;
 //
