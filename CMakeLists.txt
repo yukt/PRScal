@@ -11,7 +11,7 @@ find_package(ZLIB REQUIRED)
 find_library(STATGEN_LIBRARY StatGen)
 add_executable(PRScal
 	src/Main.cpp
-        src/UserVariables.h src/Analysis.cpp src/Analysis.h src/DosageFile.cpp src/DosageFile.h)
+        src/UserVariables.h src/Analysis.cpp src/Analysis.h src/DosageFile.cpp src/DosageFile.h src/WeightFile.cpp src/WeightFile.h)
 target_link_libraries(PRScal ${STATGEN_LIBRARY} ${ZLIB_LIBRARIES})
 
 install(TARGETS PRScal RUNTIME DESTINATION bin)

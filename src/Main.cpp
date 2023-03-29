@@ -32,26 +32,7 @@ int main(int argc, char ** argv)
 
     Analysis myAnalysis(myUserVariables);
     String MySuccessStatus = myAnalysis.Run();
-//
-//    if(!myUserVariables.CheckValidity()) return -1;
-//
-//    aggRSquareVersion();
-//    RSquare myAnalysis(myUserVariables);
-//    myAnalysis.myUserVariables->Status();
-//
-//    int start_time = time(0);
-//    myAnalysis.myUserVariables->CreateCommandLine(argc,argv);
-//
-//    String MySuccessStatus = myAnalysis.Analyze();
-//
-//    if(MySuccessStatus!="Success")
-//        return -1;
-//
-//    int time_tot = time(0) - start_time;
-//    cout << "\n Analysis finished." << endl;
-//    cout << "   -- Found " << myAnalysis.NoCommonVariants << " common variants." << endl;
-//    cout << "   -- Analysis included " << myAnalysis.NoCommonVariantsAnalyzed << " variants." << endl;
-//    cout << "   -- Analysis took " << time_tot << " seconds." << endl;
+
     return 0;
 }
 
