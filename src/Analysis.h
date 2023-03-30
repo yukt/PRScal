@@ -15,7 +15,7 @@ public:
     DosageFile InputDosage;
     WeightFile InputWeight;
 
-    int NoSamples;
+    int NoSamples, NoGenes;
     int NoVariantsAnalyzed;
 
     vector<Dosage> DosageBuffer;
@@ -23,6 +23,12 @@ public:
 
     map<string, double> CurrentWeight;
     map<string, vector<double>> TempResult;
+
+    // The primary memory usage is for TempResult
+    // a limit of memory 10GB allows storing 1e9 double numbers.
+    unsigned int memory_limit = 1e9;
+    int chunk = 0;
+    map<string, int> map_occurrence;
 
     Analysis(UserVariables &ThisUserVariables)
     :myUserVariables(&ThisUserVariables),
@@ -35,7 +41,7 @@ public:
     String Run();
     bool SanityCheck();
     bool CheckWeightFile();
-    bool OpenOutputFile() const;
+    bool OpenOutputFile();
     void OpenStreamInputFiles();
     bool CalculateScore();
     bool FindSamePosition();
@@ -43,7 +49,10 @@ public:
     bool ProcessCommonVariant();
     void ParseWeight(string line);
     void CloseStreamInputFiles();
-    bool OutputScores();
+    void OutputScores();
+
+    void FlushTempResult();
+    void OutputEntireResult();
 
 };
 

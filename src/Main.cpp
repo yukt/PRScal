@@ -38,7 +38,6 @@ int main(int argc, char ** argv)
     Version();
     Analysis myAnalysis(myUserVariables);
     myAnalysis.myUserVariables->Status();
-
     time_t start_time = time(nullptr);
     String MySuccessStatus = myAnalysis.Run();
     if(MySuccessStatus!="Success")
@@ -49,6 +48,7 @@ int main(int argc, char ** argv)
     cout << "   -- Weight file contains " << myAnalysis.InputWeight.NoMarkers << " markers." << endl;
     cout << "   -- Calculation included " << myAnalysis.NoVariantsAnalyzed << " markers." << endl;
     cout << "   -- Skipped " << myAnalysis.InputWeight.NoMarkers-myAnalysis.NoVariantsAnalyzed << " markers not found in VCF file." << endl;
+    cout << "   -- PRS for " << myAnalysis.NoGenes << " traits and " << myAnalysis.NoSamples << " samples are produced." << endl;
 
     return 0;
 }

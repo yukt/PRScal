@@ -17,8 +17,7 @@ String Analysis::Run()
     OpenStreamInputFiles();
     CalculateScore();
     CloseStreamInputFiles();
-    if(!OutputScores())
-        return "File.Write.Error";
+    OutputScores();
     return "Success";
 }
 
@@ -46,7 +45,10 @@ void Analysis::OpenStreamInputFiles()
 bool Analysis::CalculateScore()
 {
     NoVariantsAnalyzed = 0;
+    NoGenes = 0;
     DosageBuffer.clear();
+    map_occurrence.clear();
+    TempResult.clear();
 
     while(true)
     {
@@ -58,7 +60,6 @@ bool Analysis::CalculateScore()
             return true;
     }
 
-    return true;
 }
 
 bool Analysis::FindSamePosition()
@@ -158,8 +159,9 @@ bool Analysis::ProcessCommonVariant()
                             score[j] = weight * dose[j];
                         TempResult[gene] = score;
                     }
-
                 }
+                if(TempResult.size() * NoSamples > memory_limit)
+                    FlushTempResult();
                 break;
             }
         }
@@ -189,39 +191,143 @@ void Analysis::CloseStreamInputFiles()
     InputWeight.CloseStream();
 }
 
-bool Analysis::OpenOutputFile() const
+bool Analysis::OpenOutputFile()
 {
-    ofstream OutFile(myUserVariables->OutputPrefix+".scores");
-    if(!OutFile.is_open())
+    FILE* OutFile = fopen(myUserVariables->OutputPrefix+".scores", "w");
+    if(OutFile==nullptr)
     {
         cout << "\n ERROR !!! Program could NOT create the output file " << myUserVariables->OutputPrefix+".scores" << " !!!" << endl;
         cout <<" Please check your write permissions in the output directory\n OR maybe the output directory does NOT exist ...\n";
         cout << "\n Program Exiting ... \n\n";
         return false;
     }
-    OutFile.close();
-    return true;
-}
 
-bool Analysis::OutputScores()
-{
-    FILE* OutFile = fopen(myUserVariables->OutputPrefix+".scores", "w");
     fprintf(OutFile, "Gene");
     for(int i=0; i<NoSamples; i++)
         fprintf(OutFile, "\t%s", InputDosage.SampleNames[i].c_str());
     fprintf(OutFile, "\n");
+    fclose(OutFile);
+    return true;
+}
 
+void Analysis::OutputEntireResult()
+{
+    FILE* OutFile = fopen(myUserVariables->OutputPrefix+".scores", "a");
     map<string, vector<double>>::iterator it;
-
     for (it = TempResult.begin(); it != TempResult.end(); it++)
     {
         fprintf(OutFile, "%s", it->first.c_str());
         for(int i=0; i<NoSamples; i++)
-            fprintf(OutFile, "\t%f", it->second[i]);
+        {
+            double score = it->second[i];
+            if(score>-1e-4 and score<1e-4)
+                fprintf(OutFile, "\t0");
+            else
+                fprintf(OutFile, "\t%.4f", score);
+        }
         fprintf(OutFile, "\n");
+        NoGenes++;
     }
     fclose(OutFile);
-    return true;
+}
 
+
+
+void Analysis::OutputScores()
+{
+    map<string, vector<double>>::iterator it;
+
+    // if there is no temporary files, output all results directly in the output file
+    if(chunk==0)
+    {
+        OutputEntireResult();
+        return;
+    }
+
+    //if there are temporary files
+    if(!TempResult.empty())
+        FlushTempResult();
+
+    FILE* OutFile = fopen(myUserVariables->OutputPrefix+".scores", "a");
+    for(int k=1; k<=chunk; k++)
+    {
+        string InFileName(myUserVariables->OutputPrefix+".temp.chunk"+k+".scores");
+        IFILE InFile = ifopen(InFileName.c_str(), "r");
+        string line;
+
+        while(InFile->readLine(line)>-1)
+        {
+            // load data for each line
+            string gene;
+            istringstream iss(line);
+            iss >> gene;
+
+            double score;
+            vector<double> scores;
+            scores.resize(NoSamples);
+            for(int i=1; i<NoSamples; i++)
+            {
+                iss >> score;
+                scores[i] = score;
+            }
+
+            if(map_occurrence[gene]==1)
+            {
+                fprintf(OutFile, "%s", gene.c_str());
+                for(int i=0; i<NoSamples; i++)
+                {
+                    score = scores[i];
+                    if(score>-1e-4 and score<1e-4)
+                        fprintf(OutFile, "\t0");
+                    else
+                        fprintf(OutFile, "\t%.4f", score);
+                }
+                fprintf(OutFile, "\n");
+                NoGenes++;
+            }
+            else
+            {
+                it = TempResult.find(gene);
+                if(it!=TempResult.end())
+                {
+                    for(int i=0; i<NoSamples; i++)
+                        it->second[i] += scores[i];
+                }
+                else
+                    TempResult[gene] = scores;
+            }
+            line = "";
+        }
+        ifclose(InFile);
+        remove(InFileName.c_str());
+    }
+    fclose(OutFile);
+    OutputEntireResult();
+}
+
+void Analysis::FlushTempResult()
+{
+    chunk++;
+    FILE* OutFile = fopen(myUserVariables->OutputPrefix+".temp.chunk"+chunk+".scores", "w");
+
+    map<string, vector<double>>::iterator it;
+    map<string, int>::iterator it_occurrence;
+
+    for (it = TempResult.begin(); it != TempResult.end(); it++)
+    {
+        string gene = it->first;
+        fprintf(OutFile, "%s", gene.c_str());
+        for(int i=0; i<NoSamples; i++)
+            fprintf(OutFile, "\t%f", it->second[i]);
+        fprintf(OutFile, "\n");
+
+        it_occurrence = map_occurrence.find(gene);
+        if(it_occurrence != map_occurrence.end())
+            it_occurrence->second++;
+        else
+            map_occurrence[gene] = 1;
+    }
+    TempResult.clear();
+    fclose(OutFile);
 }
 
