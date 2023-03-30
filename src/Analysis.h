@@ -16,7 +16,7 @@ public:
     WeightFile InputWeight;
 
     int NoSamples;
-    int NoVariants, NoVariantsAnalyzed;
+    int NoVariantsAnalyzed;
 
     vector<Dosage> DosageBuffer;
     int BufferBp;
@@ -34,6 +34,7 @@ public:
 
     String Run();
     bool SanityCheck();
+    bool CheckWeightFile();
     bool OpenOutputFile() const;
     void OpenStreamInputFiles();
     bool CalculateScore();

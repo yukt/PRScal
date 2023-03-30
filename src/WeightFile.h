@@ -30,6 +30,7 @@ public:
         FileName = filename;
     }
 
+    bool CheckValidity();
     void OpenStream();
     bool ReadRecord();
     void CloseStream();

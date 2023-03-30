@@ -46,6 +46,9 @@ int main(int argc, char ** argv)
     time_t time_tot = time(nullptr) - start_time;
     cout << "\n Analysis finished." << endl;
     cout << "   -- Analysis took " << time_tot << " seconds." << endl;
+    cout << "   -- Weight file contains " << myAnalysis.InputWeight.NoMarkers << " markers." << endl;
+    cout << "   -- Calculation included " << myAnalysis.NoVariantsAnalyzed << " markers." << endl;
+    cout << "   -- Skipped " << myAnalysis.InputWeight.NoMarkers-myAnalysis.NoVariantsAnalyzed << " markers not found in VCF file." << endl;
 
     return 0;
 }

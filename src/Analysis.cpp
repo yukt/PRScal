@@ -9,6 +9,8 @@ String Analysis::Run()
 {
     if(!SanityCheck())
         return "Input.VCF.Error";
+    if(!CheckWeightFile())
+        return "Weight.File.Error";
     if(!OpenOutputFile())
         return "File.Write.Error";
 
@@ -18,6 +20,13 @@ String Analysis::Run()
     if(!OutputScores())
         return "File.Write.Error";
     return "Success";
+}
+
+bool Analysis::CheckWeightFile()
+{
+    if(!InputWeight.CheckValidity())
+        return false;
+    return true;
 }
 
 bool Analysis::SanityCheck()
@@ -36,7 +45,6 @@ void Analysis::OpenStreamInputFiles()
 
 bool Analysis::CalculateScore()
 {
-    NoVariants = 0;
     NoVariantsAnalyzed = 0;
     DosageBuffer.clear();
 
@@ -125,6 +133,7 @@ bool Analysis::ProcessCommonVariant()
         {
             if(InputWeight.CurrentVariantName == DosageBuffer[i].VariantName)
             {
+                NoVariantsAnalyzed++;
                 vector<double>& dose = DosageBuffer[i].dose;
                 ParseWeight(InputWeight.CurrentBetaLine);
 
