@@ -47,7 +47,7 @@ bool Analysis::CalculateScore()
     NoVariantsAnalyzed = 0;
     NoGenes = 0;
     DosageBuffer.clear();
-    map_occurrence.clear();
+    map_last_seen.clear();
     TempResult.clear();
 
     while(true)
@@ -202,7 +202,19 @@ bool Analysis::OpenOutputFile()
         return false;
     }
 
-    fprintf(OutFile, "Gene");
+    time_t rawtime;
+    struct tm * timeinfo;
+
+    time (&rawtime);
+    timeinfo = localtime (&rawtime);
+    fprintf(OutFile, "##filedate=%d.%d.%d\n",(timeinfo->tm_year + 1900),(timeinfo->tm_mon + 1) ,timeinfo->tm_mday);
+    fprintf(OutFile, "##source=PRScal.v%s\n",VERSION);
+    fprintf(OutFile, "##vcf=%s\n", InputDosage.FileName.c_str());
+    fprintf(OutFile, "##format=%s\n", InputDosage.Format.c_str());
+    fprintf(OutFile, "##weight=%s\n", InputWeight.FileName.c_str());
+    fprintf(OutFile, "##PRScal_Command=%s\n", myUserVariables->CommandLine.c_str());
+
+    fprintf(OutFile, "#Gene");
     for(int i=0; i<NoSamples; i++)
         fprintf(OutFile, "\t%s", InputDosage.SampleNames[i].c_str());
     fprintf(OutFile, "\n");
@@ -210,24 +222,27 @@ bool Analysis::OpenOutputFile()
     return true;
 }
 
+void Analysis::Output(const string& gene, vector<double>& scores, FILE* OutFile)
+{
+    fprintf(OutFile, "%s", gene.c_str());
+    for(int i=0; i<NoSamples; i++)
+    {
+        double score = scores[i];
+        if(score>-1e-4 and score<1e-4)
+            fprintf(OutFile, "\t0");
+        else
+            fprintf(OutFile, "\t%.4f", score);
+    }
+    fprintf(OutFile, "\n");
+    NoGenes++;
+}
+
 void Analysis::OutputEntireResult()
 {
     FILE* OutFile = fopen(myUserVariables->OutputPrefix+".scores", "a");
     map<string, vector<double>>::iterator it;
     for (it = TempResult.begin(); it != TempResult.end(); it++)
-    {
-        fprintf(OutFile, "%s", it->first.c_str());
-        for(int i=0; i<NoSamples; i++)
-        {
-            double score = it->second[i];
-            if(score>-1e-4 and score<1e-4)
-                fprintf(OutFile, "\t0");
-            else
-                fprintf(OutFile, "\t%.4f", score);
-        }
-        fprintf(OutFile, "\n");
-        NoGenes++;
-    }
+        Output(it->first, it->second, OutFile);
     fclose(OutFile);
 }
 
@@ -265,37 +280,36 @@ void Analysis::OutputScores()
             double score;
             vector<double> scores;
             scores.resize(NoSamples);
-            for(int i=1; i<NoSamples; i++)
+            for(int i=0; i<NoSamples; i++)
             {
                 iss >> score;
                 scores[i] = score;
             }
 
-            if(map_occurrence[gene]==1)
+            it = TempResult.find(gene);
+
+            if(it!=TempResult.end())
             {
-                fprintf(OutFile, "%s", gene.c_str());
                 for(int i=0; i<NoSamples; i++)
-                {
-                    score = scores[i];
-                    if(score>-1e-4 and score<1e-4)
-                        fprintf(OutFile, "\t0");
-                    else
-                        fprintf(OutFile, "\t%.4f", score);
-                }
-                fprintf(OutFile, "\n");
-                NoGenes++;
+                    it->second[i] += scores[i];
             }
-            else
+            else if(map_last_seen[gene] > k)
             {
-                it = TempResult.find(gene);
+                TempResult[gene] = scores;
+            }
+
+            // if this is the last occurrence of the gene, output
+            if(map_last_seen[gene]==k)
+            {
                 if(it!=TempResult.end())
                 {
-                    for(int i=0; i<NoSamples; i++)
-                        it->second[i] += scores[i];
+                    Output(gene, it->second, OutFile);
+                    TempResult.erase(it);
                 }
                 else
-                    TempResult[gene] = scores;
+                    Output(gene, scores, OutFile);
             }
+
             line = "";
         }
         ifclose(InFile);
@@ -311,7 +325,6 @@ void Analysis::FlushTempResult()
     FILE* OutFile = fopen(myUserVariables->OutputPrefix+".temp.chunk"+chunk+".scores", "w");
 
     map<string, vector<double>>::iterator it;
-    map<string, int>::iterator it_occurrence;
 
     for (it = TempResult.begin(); it != TempResult.end(); it++)
     {
@@ -321,11 +334,7 @@ void Analysis::FlushTempResult()
             fprintf(OutFile, "\t%f", it->second[i]);
         fprintf(OutFile, "\n");
 
-        it_occurrence = map_occurrence.find(gene);
-        if(it_occurrence != map_occurrence.end())
-            it_occurrence->second++;
-        else
-            map_occurrence[gene] = 1;
+        map_last_seen[gene] = chunk;
     }
     TempResult.clear();
     fclose(OutFile);

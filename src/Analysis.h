@@ -28,7 +28,7 @@ public:
     // a limit of memory 10GB allows storing 1e9 double numbers.
     unsigned int memory_limit = 1e9;
     int chunk = 0;
-    map<string, int> map_occurrence;
+    map<string, int> map_last_seen;
 
     Analysis(UserVariables &ThisUserVariables)
     :myUserVariables(&ThisUserVariables),
@@ -53,6 +53,7 @@ public:
 
     void FlushTempResult();
     void OutputEntireResult();
+    void Output(const string& gene, vector<double>& scores, FILE* OutFile);
 
 };
 

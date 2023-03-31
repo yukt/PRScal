@@ -34,6 +34,24 @@ public:
         printf( "   --format [%s]\n", Format.c_str());
     }
 
+    void CreateCommandLine(int argc, char ** argv)
+    {
+        int len = 0;
+
+        for (int i=0; i<argc; i++)
+            len += strlen(argv[i]) + 1;
+
+        char MyCommandLine[len];
+        strcpy(MyCommandLine,argv[0]);
+
+        for (int i=1; i<argc; i++)
+        {
+            strcat(MyCommandLine, " ");
+            strcat(MyCommandLine, argv[i]);
+        }
+        CommandLine=MyCommandLine;
+    }
+
     bool CheckValidity() const
     {
         if(VcfFileName == ""){
