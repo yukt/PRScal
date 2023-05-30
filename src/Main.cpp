@@ -16,17 +16,19 @@ int main(int argc, char ** argv)
                     {"weight", required_argument, nullptr, 'w'},
                     {"output", required_argument, nullptr, 'o'},
                     {"format", required_argument, nullptr, 'f'},
+                    {"memory", required_argument, nullptr, 'm'},
                     {"help",   no_argument      , nullptr, 'h'},
                     {nullptr,0,nullptr,0}
             };
 
-    while ((c = getopt_long(argc, argv, "v:w:o:f:h",loptions,nullptr)) >= 0)
+    while ((c = getopt_long(argc, argv, "v:w:o:f:m:h",loptions,nullptr)) >= 0)
     {
         switch (c) {
             case 'v': myUserVariables.VcfFileName = optarg;   break;
             case 'w': myUserVariables.WeightFileName = optarg;   break;
             case 'o': myUserVariables.OutputPrefix = optarg;   break;
             case 'f': myUserVariables.Format = optarg;   break;
+            case 'm': myUserVariables.Memory = optarg;   break;
             case 'h': helpFile(); return 0;
             case '?': helpFile(); return 0;
             default: printf("[ERROR:] Unknown argument: %s\n", optarg);
@@ -74,6 +76,7 @@ void helpFile()
     printf( "   -w [weights.gz]                // [Required] Input Weight File\n");
     printf( "   -o [OutputPrefix]              // [Required] Output Prefix\n");
     printf( "   --format [GT/DS/HDS]           // [Optional] Genotype info format (Default: DS)\n");
+    printf( "   --memory [3.5]                 // [Optional] Memory Limit (Default: 3.5GB)\n");
     printf( "   -h, --help                     //  If ON, detailed help on options and usage. \n");
     printf( " Note: the weight file should contain tab-separated columns:\n");
     printf( "       \t\t#CHROM\t|\tBP\t|\tID\t|\tREF\t|\tALT\t|\tBETA\n");

@@ -15,6 +15,8 @@ public:
     string Format;
     String WeightFileName;
     String OutputPrefix;
+    string Memory;
+    double memory;
 
     string CommandLine;
 
@@ -23,6 +25,8 @@ public:
         WeightFileName = "";
         OutputPrefix = "";
         Format = "DS";
+        Memory = "";
+        memory = 3.5;
     };
 
     void Status()
@@ -32,6 +36,8 @@ public:
         printf( "   --weight [%s]\n", WeightFileName.c_str());
         printf( "   --output [%s]\n", OutputPrefix.c_str());
         printf( "   --format [%s]\n", Format.c_str());
+        if(!Memory.empty())
+            printf( "   --memory [%s]\n", Memory.c_str());
     }
 
     void CreateCommandLine(int argc, char ** argv)
@@ -52,8 +58,7 @@ public:
         CommandLine=MyCommandLine;
     }
 
-    bool CheckValidity() const
-    {
+    bool CheckValidity() {
         if(VcfFileName == ""){
             cout<< " Missing -v [--vcf], a required parameter.\n\n";
             cout<< " Try -h [--help] for usage ...\n\n";
@@ -76,6 +81,19 @@ public:
         {
             printf("ERROR !!! Invalid argument --format %s !!!\n", Format.c_str());
             return false;
+        }
+
+        if(!Memory.empty())
+        {
+            try
+            {
+                memory = stod(Memory);
+            }
+            catch(...)
+            {
+                printf("ERROR !!! Invalid argument --memory %s !!!\n", Memory.c_str());
+                return false;
+            }
         }
 
         return true;

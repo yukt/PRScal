@@ -26,7 +26,7 @@ public:
 
     // The primary memory usage is for TempResult
     // a limit of memory 10GB allows storing 1e9 double numbers.
-    unsigned int memory_limit = 1e9;
+    double memory_limit;
     int chunk = 0;
     map<string, int> map_last_seen;
 
@@ -35,7 +35,7 @@ public:
     InputDosage(ThisUserVariables.VcfFileName, ThisUserVariables.Format),
     InputWeight(ThisUserVariables.WeightFileName)
     {
-
+        memory_limit = ThisUserVariables.memory * 1e8;
     }
 
     String Run();
